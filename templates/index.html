@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JUTSU TRAINER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #05050d;
+  --panel: rgba(8,8,20,0.82);
+  --border: rgba(255,210,50,0.25);
+  --border-bright: rgba(255,210,50,0.75);
+  --accent: #ffd232;
+  --accent2: #00d7ff;
+  --red: #ff2244;
+  --purple: #c040ff;
+  --green: #00ff88;
+  --text: #e8e8e8;
+  --dim: #666;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'Rajdhani', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ═══════════════════════════════════════════
+   PAGE SYSTEM
+═══════════════════════════════════════════ */
+.page {
+  position: absolute; inset: 0;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.45s ease;
+  z-index: 1;
+}
+.page.active {
+  opacity: 1; pointer-events: all;
+  z-index: 2;
+}
+
+/* ═══════════════════════════════════════════
+   SHARED ANIMATED BACKGROUND
+═══════════════════════════════════════════ */
+.bg-canvas {
+  position: fixed; inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg-canvas svg {
+  width: 100%; height: 100%;
+  opacity: 0.07;
+}
+/* floating chakra orbs */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  animation: orb-drift linear infinite;
+  pointer-events: none;
+}
+@keyframes orb-drift {
+  0%   { transform: translate(0,0) scale(1); }
+  33%  { transform: translate(40px,-30px) scale(1.1); }
+  66%  { transform: translate(-20px,50px) scale(0.9); }
+  100% { transform: translate(0,0) scale(1); }
+}
+
+/* ═══════════════════════════════════════════
+   PAGE 1: MAIN MENU
+═══════════════════════════════════════════ */
+#page-menu {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0;
+}
+
+.menu-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 6px;
+  color: var(--accent2);
+  margin-bottom: 12px;
+  opacity: 0;
+  animation: fade-up 0.7s 0.2s forwards;
+}
+
+.menu-logo {
+  font-family: var(--font-display);
+  font-size: clamp(64px, 10vw, 130px);
+  letter-spacing: 12px;
+  line-height: 0.9;
+  text-align: center;
+  color: var(--accent);
+  text-shadow: 0 0 60px rgba(255,210,50,0.35), 0 0 120px rgba(255,210,50,0.15);
+  opacity: 0;
+  animation: fade-up 0.7s 0.4s forwards;
+}
+.menu-logo span { color: var(--text); }
+
+.menu-sub {
+  font-family: var(--font-body);
+  font-size: 14px;
+  letter-spacing: 4px;
+  font-weight: 300;
+  color: var(--dim);
+  margin-top: 10px;
+  margin-bottom: 60px;
+  opacity: 0;
+  animation: fade-up 0.7s 0.55s forwards;
+}
+
+.menu-cards {
+  display: flex; gap: 28px;
+  opacity: 0;
+  animation: fade-up 0.7s 0.75s forwards;
+}
+
+.menu-card {
+  position: relative;
+  width: 260px;
+  padding: 36px 28px 32px;
+  background: rgba(8,8,22,0.9);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.3s;
+  text-align: center;
+}
+.menu-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: inherit;
+}
+.menu-card.practice::before { background: radial-gradient(ellipse at 50% 0%, rgba(255,210,50,0.12) 0%, transparent 70%); }
+.menu-card.training::before { background: radial-gradient(ellipse at 50% 0%, rgba(0,215,255,0.12) 0%, transparent 70%); }
+.menu-card:hover { transform: translateY(-6px); }
+.menu-card.practice:hover { border-color: var(--accent); box-shadow: 0 0 30px rgba(255,210,50,0.18), 0 16px 40px rgba(0,0,0,0.4); }
+.menu-card.training:hover { border-color: var(--accent2); box-shadow: 0 0 30px rgba(0,215,255,0.18), 0 16px 40px rgba(0,0,0,0.4); }
+.menu-card:hover::before { opacity: 1; }
+
+.card-icon {
+  font-size: 44px;
+  margin-bottom: 16px;
+  display: block;
+  line-height: 1;
+}
+.card-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  letter-spacing: 5px;
+  margin-bottom: 10px;
+}
+.menu-card.practice .card-title { color: var(--accent); }
+.menu-card.training .card-title { color: var(--accent2); }
+.card-desc {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.6;
+  letter-spacing: 0.5px;
+}
+.card-arrow {
+  display: inline-block;
+  margin-top: 22px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 2px;
+  padding: 7px 20px;
+  border-radius: 6px;
+  border: 1px solid;
+  transition: background 0.2s;
+}
+.menu-card.practice .card-arrow { border-color: var(--accent); color: var(--accent); }
+.menu-card.practice:hover .card-arrow { background: rgba(255,210,50,0.12); }
+.menu-card.training .card-arrow { border-color: var(--accent2); color: var(--accent2); }
+.menu-card.training:hover .card-arrow { background: rgba(0,215,255,0.12); }
+
+.menu-version {
+  position: absolute; bottom: 18px;
+  font-family: var(--font-mono); font-size: 10px;
+  color: rgba(255,255,255,0.12); letter-spacing: 2px;
+}
+
+/* sharingan bg deco */
+.sharingan-deco {
+  position: absolute;
+  width: 520px; height: 520px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,34,68,0.08);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.sharingan-deco::before {
+  content: '';
+  position: absolute; inset: 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,34,68,0.05);
+}
+.sharingan-deco::after {
+  content: '';
+  position: absolute; inset: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,34,68,0.03);
+}
+.sharingan-spin {
+  position: absolute;
+  width: 500px; height: 500px;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  animation: spin 30s linear infinite;
+  pointer-events: none;
+}
+@keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+@keyframes spin-rev { to { transform: translate(-50%,-50%) rotate(-360deg); } }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════
+   PAGE 2: TRAINING MENU
+═══════════════════════════════════════════ */
+#page-training-menu {
+  display: flex; flex-direction: column;
+}
+
+.tm-topbar {
+  display: flex; align-items: center;
+  padding: 0 24px; height: 56px;
+  background: rgba(5,5,14,0.97);
+  border-bottom: 1px solid var(--border);
+  gap: 16px; flex-shrink: 0;
+  z-index: 10;
+}
+.back-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.back-btn:hover { border-color: var(--border-bright); color: var(--accent); }
+
+.tm-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 4px;
+  color: var(--accent2);
+}
+.tm-subtitle {
+  font-size: 11px; letter-spacing: 2px; color: var(--dim);
+}
+
+.tm-body {
+  flex: 1; overflow-y: auto;
+  padding: 28px 40px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.tm-body::-webkit-scrollbar { width: 4px; }
+.tm-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.tm-section-label {
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 4px;
+  color: var(--dim); margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.jutsu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.jutsu-card {
+  background: rgba(8,8,22,0.85);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 16px 14px;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.jutsu-card::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--card-accent, var(--accent));
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.jutsu-card:hover {
+  border-color: var(--card-accent, var(--accent));
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.jutsu-card:hover::after { opacity: 1; }
+
+.jc-kanji {
+  font-size: 28px; margin-bottom: 8px;
+  display: block; line-height: 1;
+}
+.jc-jutsu-name {
+  font-family: var(--font-display);
+  font-size: 16px; letter-spacing: 2px;
+  color: var(--card-accent, var(--accent));
+  line-height: 1.2; margin-bottom: 2px;
+}
+.jc-english {
+  font-size: 11px; color: rgba(255,255,255,0.35);
+  letter-spacing: 0.5px; margin-bottom: 10px;
+  line-height: 1.4;
+}
+.jc-signs {
+  font-family: var(--font-mono);
+  font-size: 9px; color: rgba(255,255,255,0.25);
+  line-height: 1.5;
+}
+.jc-badge {
+  display: inline-block;
+  font-size: 8px; letter-spacing: 1px;
+  padding: 2px 6px; border-radius: 3px;
+  font-weight: 700; margin-top: 6px;
+}
+
+/* ═══════════════════════════════════════════
+   PAGE 3: TRAINING MODE
+═══════════════════════════════════════════ */
+#page-training {
+  display: grid;
+  grid-template-columns: 220px 1fr 220px;
+  grid-template-rows: 56px 1fr 140px;
+}
+
+/* reuse shared topbar */
+.shared-topbar {
+  grid-column: 1 / -1;
+  display: flex; align-items: center;
+  padding: 0 20px;
+  background: rgba(5,5,14,0.95);
+  border-bottom: 1px solid var(--border);
+  gap: 16px; z-index: 10;
+}
+.topbar-logo {
+  font-family: var(--font-display);
+  font-size: 24px; letter-spacing: 4px;
+  color: var(--accent);
+  text-shadow: 0 0 20px rgba(255,210,50,0.5);
+}
+.topbar-logo span { color: var(--accent2); }
+.topbar-divider { flex: 1; }
+.fps-badge {
+  font-family: var(--font-mono); font-size: 13px;
+  padding: 4px 12px; border-radius: 4px;
+  border: 1px solid currentColor;
+  transition: color 0.3s, border-color 0.3s;
+}
+.fps-badge.good { color: var(--green); }
+.fps-badge.ok   { color: orange; }
+.fps-badge.bad  { color: var(--red); }
+.btn-reset {
+  padding: 6px 18px;
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  border-radius: 6px;
+  color: var(--accent);
+  font-family: var(--font-body); font-size: 13px;
+  font-weight: 700; letter-spacing: 2px;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.btn-reset:hover {
+  background: rgba(255,210,50,0.12);
+  box-shadow: 0 0 12px rgba(255,210,50,0.3);
+}
+
+/* video */
+.video-area {
+  position: relative; overflow: hidden;
+  background: #000;
+}
+.video-area img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.jutsu-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  pointer-events: none; z-index: 5;
+}
+.jutsu-name-display {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 56px);
+  letter-spacing: 6px; text-align: center;
+  text-shadow: 0 0 30px currentColor, 0 0 60px currentColor;
+  opacity: 0; transform: scale(0.6);
+}
+.jutsu-name-display.firing {
+  animation: jutsu-pop 2.5s ease-out forwards;
+}
+@keyframes jutsu-pop {
+  0%  { opacity:0; transform:scale(0.5); }
+  15% { opacity:1; transform:scale(1.08); }
+  30% { opacity:1; transform:scale(1.0); }
+  70% { opacity:1; transform:scale(1.0); }
+  100%{ opacity:0; transform:scale(1.1); }
+}
+
+/* side panels */
+.side-panel {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 16px 14px; gap: 14px;
+  overflow-y: auto; scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.side-panel.right { border-right: none; border-left: 1px solid var(--border); }
+.side-panel::-webkit-scrollbar { width: 3px; }
+.side-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 15px; letter-spacing: 3px;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.sign-card {
+  background: rgba(255,210,50,0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px;
+}
+.sign-name {
+  font-family: var(--font-display);
+  font-size: 32px; letter-spacing: 3px;
+  color: var(--green); min-height: 40px;
+  transition: color 0.2s;
+}
+.sign-name.empty { color: var(--dim); font-size: 18px; }
+.conf-bar-wrap {
+  margin-top: 8px; height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px; overflow: hidden;
+}
+.conf-bar { height: 100%; width: 0%; border-radius: 2px; transition: width 0.15s, background 0.3s; }
+.conf-label { font-family: var(--font-mono); font-size: 11px; color: var(--dim); margin-top: 4px; }
+
+.chakra-wrap { display: flex; flex-direction: column; gap: 6px; }
+.chakra-title { font-size: 11px; letter-spacing: 2px; color: var(--dim); font-weight: 600; text-transform: uppercase; }
+.chakra-dots { display: flex; gap: 8px; flex-wrap: wrap; }
+.chakra-dot { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.dot-circle {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(255,210,50,0.6);
+  display: flex; align-items: center; justify-content: center;
+}
+.dot-label { font-family: var(--font-mono); font-size: 9px; color: var(--accent); text-align: center; }
+.chakra-empty { font-size: 12px; color: rgba(255,255,255,0.15); font-style: italic; letter-spacing: 1px; }
+
+.sharingan-badge {
+  border-radius: 6px; padding: 8px 12px;
+  font-family: var(--font-display); font-size: 16px;
+  letter-spacing: 2px; text-align: center; border: 1px solid;
+  transition: all 0.4s;
+}
+.sharingan-badge.inactive { border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.2); }
+.sharingan-badge.active   { border-color: var(--red); color: var(--red); background: rgba(255,34,68,0.08); box-shadow: 0 0 14px rgba(255,34,68,0.3); }
+.sharingan-badge.mangekyou{ border-color: var(--purple); color: var(--purple); background: rgba(192,64,255,0.1); box-shadow: 0 0 20px rgba(192,64,255,0.4); animation: mangekyou-pulse 1.5s infinite; }
+@keyframes mangekyou-pulse { 0%,100%{box-shadow:0 0 20px rgba(192,64,255,0.4)} 50%{box-shadow:0 0 40px rgba(192,64,255,0.7)} }
+
+.jutsu-counter { display: flex; gap: 6px; justify-content: center; margin-top: 4px; }
+.counter-pip { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,34,68,0.25); border: 1px solid rgba(255,34,68,0.4); transition: background 0.3s, box-shadow 0.3s; }
+.counter-pip.filled { background: var(--red); box-shadow: 0 0 8px rgba(255,34,68,0.8); }
+
+/* jutsu guide right panel */
+.jutsu-guide { display: flex; flex-direction: column; gap: 8px; }
+.guide-item {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px; padding: 8px 10px;
+  cursor: pointer; transition: border-color 0.2s, background 0.2s;
+}
+.guide-item:hover { border-color: var(--border-bright); background: rgba(255,210,50,0.05); }
+.guide-item.combo { border-left: 2px solid var(--accent2); }
+.guide-item.sharingan-req { border-left: 2px solid var(--red); }
+.guide-name { font-family: var(--font-display); font-size: 13px; letter-spacing: 1px; color: var(--accent); line-height: 1.2; }
+.guide-item.combo .guide-name { color: var(--accent2); }
+.guide-item.sharingan-req .guide-name { color: var(--red); }
+.guide-seq { font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 3px; line-height: 1.4; }
+.guide-tag { display: inline-block; font-size: 9px; letter-spacing: 1px; padding: 1px 5px; border-radius: 3px; margin-top: 4px; font-weight: 700; }
+.tag-combo  { background: rgba(0,215,255,0.15); color: var(--accent2); border: 1px solid rgba(0,215,255,0.3); }
+.tag-req    { background: rgba(255,34,68,0.12);  color: var(--red);     border: 1px solid rgba(255,34,68,0.3); }
+.tag-toggle { background: rgba(255,210,50,0.1);  color: var(--accent);  border: 1px solid rgba(255,210,50,0.3); }
+.guide-item.active-now { border-color: var(--green) !important; background: rgba(0,255,136,0.06) !important; box-shadow: 0 0 10px rgba(0,255,136,0.2); }
+
+/* bottom bar — practice */
+.bottombar {
+  grid-column: 1 / -1;
+  background: rgba(5,5,14,0.95);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 24px;
+}
+.hotkey { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5); }
+.key-badge { font-family: var(--font-mono); font-size: 11px; padding: 2px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: rgba(255,255,255,0.7); }
+.active-jutsu-bar { flex: 1; display: flex; justify-content: center; align-items: center; }
+.active-jutsu-name { font-family: var(--font-display); font-size: 22px; letter-spacing: 5px; text-shadow: 0 0 20px currentColor; animation: active-glow 1s infinite alternate; display: none; }
+@keyframes active-glow { from{opacity:0.8} to{opacity:1} }
+.combo-hint { font-family: var(--font-mono); font-size: 11px; color: var(--accent2); display: none; }
+
+/* ═══════════════════════════════════════════
+   PAGE 4: TRAINING MODE
+═══════════════════════════════════════════ */
+#page-training {
+  display: grid;
+  grid-template-columns: 220px 1fr 220px;
+  grid-template-rows: 56px 1fr 148px;
+}
+
+/* ── TRAINING BOTTOM SEQUENCE BAR ── */
+.training-bottom {
+  grid-column: 1 / -1;
+  background: rgba(4,4,14,0.98);
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 12px 24px 14px;
+  gap: 8px;
+}
+.training-bottom-header {
+  display: flex; align-items: center; gap: 16px;
+}
+.training-jutsu-title {
+  font-family: var(--font-display);
+  font-size: 20px; letter-spacing: 4px;
+  transition: color 0.3s;
+}
+.training-status {
+  font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: 2px;
+  padding: 3px 10px; border-radius: 4px;
+  border: 1px solid; transition: all 0.3s;
+}
+.training-status.waiting  { color: var(--dim); border-color: var(--dim); }
+.training-status.progress { color: var(--accent); border-color: var(--accent); }
+.training-status.done     { color: var(--green); border-color: var(--green); }
+
+.training-spacer { flex: 1; }
+.btn-change-jutsu {
+  background: transparent;
+  border: 1px solid rgba(0,215,255,0.3);
+  border-radius: 6px; padding: 5px 16px;
+  color: var(--accent2); font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-change-jutsu:hover { background: rgba(0,215,255,0.08); border-color: var(--accent2); }
+
+.sign-sequence {
+  display: flex; gap: 10px; align-items: center;
+  overflow-x: auto; padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.sign-sequence::-webkit-scrollbar { display: none; }
+
+.seq-arrow {
+  color: rgba(255,255,255,0.15);
+  font-size: 16px; flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+
+.sign-box {
+  flex-shrink: 0;
+  width: 68px;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  overflow: hidden;
+  transition: border-color 0.3s, background 0.3s, opacity 0.4s, transform 0.3s;
+  position: relative;
+}
+.sign-box.current {
+  border-color: var(--accent) !important;
+  background: rgba(255,210,50,0.05) !important;
+  box-shadow: 0 0 14px rgba(255,210,50,0.3);
+  transform: scale(1.06);
+}
+.sign-box.done {
+  border-color: var(--green) !important;
+  background: rgba(0,255,136,0.04) !important;
+  opacity: 0.5;
+}
+.sign-box.done::after {
+  content: '✓';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: var(--green);
+  background: rgba(0,0,0,0.45);
+  border-radius: 6px;
+}
+
+.sign-box-img {
+  width: 100%; aspect-ratio: 1;
+  background: rgba(255,255,255,0.04);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.sign-box-label {
+  font-family: var(--font-mono);
+  font-size: 8px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.5);
+  text-align: center; padding: 4px 2px;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+.sign-box.current .sign-box-label { color: var(--accent); }
+.sign-box.done .sign-box-label    { color: var(--green); }
+
+/* training mode side panel — selected jutsu info */
+.training-jutsu-info {
+  display: flex; flex-direction: column; gap: 12px;
+}
+.tji-name {
+  font-family: var(--font-display);
+  font-size: 20px; letter-spacing: 2px;
+  line-height: 1.2;
+}
+.tji-english {
+  font-size: 12px; color: rgba(255,255,255,0.4);
+  letter-spacing: 1px; line-height: 1.5;
+}
+.tji-kanji { font-size: 40px; opacity: 0.3; text-align: center; padding: 8px 0; }
+.tji-signs-label { font-size: 10px; letter-spacing: 2px; color: var(--dim); font-weight: 600; }
+.tji-signs-list { font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.4); line-height: 2; }
+.tji-progress-wrap { margin-top: 4px; }
+.tji-progress-bar-bg { height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+.tji-progress-bar { height: 100%; width: 0%; background: var(--green); border-radius: 2px; transition: width 0.4s; }
+.tji-progress-label { font-family: var(--font-mono); font-size: 10px; color: var(--dim); margin-top: 4px; }
+
+/* jutsu complete banner */
+.complete-banner {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  pointer-events: none; z-index: 6;
+}
+.complete-text {
+  font-family: var(--font-display);
+  font-size: clamp(24px,4vw,52px);
+  letter-spacing: 6px;
+  text-shadow: 0 0 30px currentColor, 0 0 60px currentColor;
+  opacity: 0;
+}
+.complete-text.show {
+  animation: jutsu-pop 2.8s ease-out forwards, complete-fade 4s 2.8s ease-out forwards;
+}
+@keyframes complete-fade {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════
+   PAGE 5: PRACTICE MODE (original)
+═══════════════════════════════════════════ */
+#page-practice {
+  display: grid;
+  grid-template-columns: 260px 260px 1fr;
+  grid-template-rows: 56px 1fr 110px;
+}
+
+#page-practice .side-panel { grid-row: 2 / 3; }
+#page-practice .bottombar  { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<!-- ANIMATED BACKGROUND (shared) -->
+<div class="bg-canvas">
+  <div class="orb" style="width:400px;height:400px;background:rgba(255,100,0,0.06);top:10%;left:15%;animation-duration:18s;"></div>
+  <div class="orb" style="width:300px;height:300px;background:rgba(0,180,255,0.06);top:55%;right:10%;animation-duration:23s;animation-delay:-7s;"></div>
+  <div class="orb" style="width:250px;height:250px;background:rgba(192,64,255,0.05);bottom:20%;left:40%;animation-duration:28s;animation-delay:-12s;"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 1: MAIN MENU
+══════════════════════════════════════ -->
+<div class="page active" id="page-menu">
+  <!-- decorative sharingan rings -->
+  <div class="sharingan-deco"></div>
+  <svg class="sharingan-spin" viewBox="0 0 500 500" style="position:absolute;opacity:0.04;" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="250" cy="250" r="240" fill="none" stroke="#ff2244" stroke-width="1" stroke-dasharray="8 16"/>
+    <circle cx="250" cy="250" r="180" fill="none" stroke="#ff2244" stroke-width="0.5" stroke-dasharray="4 20"/>
+  </svg>
+
+  <div class="menu-eyebrow">NARUTO HAND SIGN RECOGNITION SYSTEM</div>
+  <div class="menu-logo">JUTSU<br><span>TRAINER</span></div>
+  <div class="menu-sub">SELECT YOUR MODE</div>
+
+  <div class="menu-cards">
+    <div class="menu-card practice" onclick="goTo('page-practice')">
+      <span class="card-icon">🔥</span>
+      <div class="card-title">PRACTICE</div>
+      <div class="card-desc">Free mode — perform any jutsu. All signs and sequences available. No guidance.</div>
+      <div class="card-arrow">ENTER →</div>
+    </div>
+
+    <div class="menu-card training" onclick="goTo('page-training-menu')">
+      <span class="card-icon">📖</span>
+      <div class="card-title">TRAINING</div>
+      <div class="card-desc">Guided mode — select a jutsu and follow the hand sign sequence step by step.</div>
+      <div class="card-arrow">ENTER →</div>
+    </div>
+  </div>
+
+  <div class="menu-version">v2.0 · KONOHAGAKURE SYSTEM</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 2: TRAINING JUTSU SELECTOR
+══════════════════════════════════════ -->
+<div class="page" id="page-training-menu">
+  <div class="tm-topbar">
+    <button class="back-btn" onclick="goTo('page-menu')">← BACK</button>
+    <div style="width:1px;height:28px;background:var(--border);"></div>
+    <div>
+      <div class="tm-title">TRAINING MODE</div>
+      <div class="tm-subtitle">SELECT A JUTSU TO TRAIN</div>
+    </div>
+  </div>
+  <div class="tm-body">
+    <div class="tm-section-label">Available Jutsus</div>
+    <div class="jutsu-grid" id="training-jutsu-grid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 3: TRAINING MODE
+══════════════════════════════════════ -->
+<div class="page" id="page-training">
+  <!-- TOP BAR -->
+  <div class="shared-topbar">
+    <button class="back-btn" onclick="goTo('page-training-menu')">← JUTSU LIST</button>
+    <div class="topbar-logo" style="font-size:18px;">TRAINING <span>MODE</span></div>
+    <div class="topbar-divider"></div>
+    <div class="fps-badge good" id="tr-fps-badge">-- FPS</div>
+    <button class="btn-reset" onclick="resetTraining()">⟳ RESET</button>
+    <button class="back-btn" style="margin-left:4px;" onclick="goTo('page-menu')">MENU</button>
+  </div>
+
+  <!-- LEFT PANEL: Detection + jutsu info -->
+  <div class="side-panel">
+    <div class="panel-title">DETECTION</div>
+    <div class="sign-card">
+      <div class="sign-name empty" id="tr-sign-name">NO SIGN</div>
+      <div class="conf-bar-wrap"><div class="conf-bar" id="tr-conf-bar"></div></div>
+      <div class="conf-label" id="tr-conf-label">CONFIDENCE: --</div>
+    </div>
+
+    <div class="panel-title" style="margin-top:4px;">SELECTED JUTSU</div>
+    <div class="training-jutsu-info" id="tr-jutsu-info">
+      <div class="tji-kanji" id="tr-kanji">?</div>
+      <div class="tji-name" id="tr-jutsu-name" style="color:var(--accent);">—</div>
+      <div class="tji-english" id="tr-english">Select a jutsu from the training menu</div>
+      <div class="tji-signs-label">SEQUENCE</div>
+      <div class="tji-signs-list" id="tr-signs-list">—</div>
+      <div class="tji-progress-wrap">
+        <div class="tji-progress-bar-bg"><div class="tji-progress-bar" id="tr-progress-bar"></div></div>
+        <div class="tji-progress-label" id="tr-progress-label">0 / 0 signs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIDEO -->
+  <div class="video-area">
+    <img src="/video_feed" alt="Camera Feed"/>
+    <div class="jutsu-overlay">
+      <div class="jutsu-name-display" id="tr-jutsu-display"></div>
+    </div>
+    <div class="complete-banner">
+      <div class="complete-text" id="tr-complete-text"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: next sign hint -->
+  <div class="side-panel right">
+    <div class="panel-title">NEXT SIGN</div>
+    <div id="tr-next-sign-area" style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+      <div style="font-size:60px;line-height:1;" id="tr-next-emoji">👋</div>
+      <div style="font-family:var(--font-display);font-size:22px;letter-spacing:3px;color:var(--accent);text-align:center;" id="tr-next-name">—</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);text-align:center;letter-spacing:1px;" id="tr-next-hint">Waiting...</div>
+    </div>
+
+    <div class="panel-title" style="margin-top:8px;">TIPS</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.35);line-height:1.7;letter-spacing:0.3px;">
+      Hold each sign steady for <span style="color:var(--accent);">~1 second</span> until it registers.<br><br>
+      Keep both hands visible in frame when possible.<br><br>
+      Good lighting improves detection.
+    </div>
+  </div>
+
+  <!-- TRAINING SEQUENCE BAR -->
+  <div class="training-bottom">
+    <div class="training-bottom-header">
+      <div class="training-jutsu-title" id="tr-bottom-title" style="color:var(--accent);">Select a jutsu to begin</div>
+      <div class="training-status waiting" id="tr-status">WAITING</div>
+      <div class="training-spacer"></div>
+      <button class="btn-change-jutsu" onclick="goTo('page-training-menu')">CHANGE JUTSU</button>
+    </div>
+    <div class="sign-sequence" id="tr-sign-sequence">
+      <div style="color:var(--dim);font-family:var(--font-mono);font-size:12px;">← Select a jutsu from the menu</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 4: PRACTICE MODE
+══════════════════════════════════════ -->
+<div class="page" id="page-practice">
+  <!-- TOP BAR -->
+  <div class="shared-topbar">
+    <button class="back-btn" onclick="goTo('page-menu')">← MENU</button>
+    <div class="topbar-logo">JUTSU <span>TRAINER</span></div>
+    <div style="width:1px;height:28px;background:var(--border);margin:0 4px;"></div>
+    <div style="font-size:12px;color:var(--dim);letter-spacing:2px;">PRACTICE MODE</div>
+    <div class="topbar-divider"></div>
+    <div class="fps-badge good" id="fps-badge">-- FPS</div>
+    <button class="btn-reset" onclick="resetApp()">⟳ RESET</button>
+  </div>
+
+  <!-- LEFT PANEL -->
+  <div class="side-panel">
+    <div class="panel-title">DETECTION</div>
+    <div class="sign-card">
+      <div class="sign-name empty" id="sign-name">NO SIGN</div>
+      <div class="conf-bar-wrap"><div class="conf-bar" id="conf-bar"></div></div>
+      <div class="conf-label" id="conf-label">CONFIDENCE: --</div>
+    </div>
+    <div class="chakra-wrap">
+      <div class="chakra-title">CHAKRA BUFFER</div>
+      <div class="chakra-dots" id="chakra-dots"><div class="chakra-empty">Awaiting signs...</div></div>
+    </div>
+    <div class="panel-title" style="margin-top:4px;">SHARINGAN</div>
+    <div class="sharingan-badge inactive" id="sharingan-badge">DORMANT</div>
+    <div class="jutsu-counter" id="jutsu-counter">
+      <div class="counter-pip" id="pip-0"></div>
+      <div class="counter-pip" id="pip-1"></div>
+      <div class="counter-pip" id="pip-2"></div>
+    </div>
+    <div style="font-size:11px;color:var(--dim);text-align:center;">Cast 3 jutsus to awaken Mangekyou</div>
+  </div>
+
+  <!-- RIGHT PANEL (now middle) -->
+  <div class="side-panel right">
+    <div class="panel-title">JUTSU GUIDE</div>
+    <div class="jutsu-guide" id="jutsu-guide"></div>
+  </div>
+
+  <!-- VIDEO (now right) -->
+  <div class="video-area">
+    <img src="/video_feed" alt="Camera Feed"/>
+    <div class="jutsu-overlay">
+      <div class="jutsu-name-display" id="jutsu-display"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div class="bottombar">
+    <div class="hotkey"><span class="key-badge">R</span> Reset</div>
+    <div class="hotkey"><span class="key-badge">G</span> Guide</div>
+    <div class="active-jutsu-bar">
+      <div class="active-jutsu-name" id="active-jutsu-name"></div>
+      <div class="combo-hint" id="combo-hint">⚡ SHARINGAN ACTIVE — Chidori → KIRIN | Dog→Tiger→Boar → AMATERASU</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════ -->
+<script>
+// ── DATA FROM FLASK ──
+const JUTSU_DATA  = {{ jutsu_data | tojson }};
+const JUTSU_NAMES = {{ jutsu_names | tojson }};
+
+const JUTSU_CSS_COLORS = {
+  fireball:"#ff5500", chidori:"#ffe040", rasengan:"#80c8ff",
+  shadow_clone:"#00d7ff", sharingan:"#ff2244", flamethrower:"#ff3300",
+  susanoo:"#7060ff", kirin:"#c8e8ff", water_dragon:"#00aaff",
+  amaterasu:"#440088", sand_shield:"#c8a060", mangekyou:"#c040ff",
+};
+
+// English translations + kanji + emoji for each jutsu
+const JUTSU_INFO = {
+  fireball:     { en:"Great Fireball Technique",        kanji:"火遁・豪火球", emoji:"🔥", color:"#ff5500" },
+  chidori:      { en:"One Thousand Birds",               kanji:"千鳥",       emoji:"⚡", color:"#ffe040" },
+  rasengan:     { en:"Spiralling Sphere",                kanji:"螺旋丸",     emoji:"🌀", color:"#80c8ff" },
+  shadow_clone: { en:"Shadow Clone Technique",           kanji:"影分身の術", emoji:"👥", color:"#00d7ff" },
+  sharingan:    { en:"Copy Wheel Eye (Toggle)",          kanji:"写輪眼",     emoji:"👁", color:"#ff2244" },
+  flamethrower: { en:"Dragon Fire Technique",            kanji:"龍火の術",   emoji:"🐉", color:"#ff3300" },
+  susanoo:      { en:"He with the ability to help",      kanji:"須佐能乎",   emoji:"⚔️",  color:"#7060ff" },
+  kirin:        { en:"Qilin (Combo: Sharingan+Chidori)", kanji:"麒麟",       emoji:"🌩", color:"#c8e8ff" },
+  water_dragon: { en:"Water Dragon Bullet Technique",    kanji:"水龍弾の術", emoji:"🌊", color:"#00aaff" },
+  amaterasu:    { en:"Goddess of the Sun (Sharingan)",   kanji:"天照",       emoji:"🖤", color:"#9900ff" },
+  sand_shield:  { en:"Sand Binding Coffin",              kanji:"砂漠大葬",   emoji:"🏜", color:"#c8a060" },
+  mangekyou:    { en:"Kaleidoscope Sharingan (3 Casts)", kanji:"万華鏡写輪眼",emoji:"🔮", color:"#c040ff" },
+};
+
+// Signs that are trainable (have a sequence, not just combos)
+const TRAINABLE = [
+  "fireball","chidori","rasengan","shadow_clone",
+  "sharingan","flamethrower","susanoo","water_dragon",
+  "amaterasu","sand_shield"
+];
+
+const SIGN_EMOJI = {
+  horse:"🐴", tiger:"🐯", ox:"🐂", hare:"🐰",
+  monkey:"🐒", bird:"🐦", dog:"🐕", ram:"🐑",
+  snake:"🐍", dragon:"🐲", boar:"🐗",
+};
+
+// ── PAGE NAVIGATION ──
+let currentPage = "page-menu";
+function goTo(id) {
+  document.getElementById(currentPage).classList.remove("active");
+  document.getElementById(id).classList.add("active");
+  currentPage = id;
+  if (id === "page-training-menu") buildTrainingMenu();
+}
+
+// ── BUILD PRACTICE GUIDE ──
+const guideOrder = [
+  {key:"fireball",     type:"normal"},{key:"chidori",      type:"normal"},
+  {key:"rasengan",     type:"normal"},{key:"shadow_clone", type:"normal"},
+  {key:"sharingan",    type:"toggle"},{key:"flamethrower", type:"normal"},
+  {key:"susanoo",      type:"req"},  {key:"water_dragon",  type:"normal"},
+  {key:"amaterasu",    type:"req"},  {key:"sand_shield",   type:"normal"},
+  {key:"kirin",        type:"combo"},{key:"mangekyou",     type:"combo"},
+];
+const guideEl = document.getElementById("jutsu-guide");
+guideOrder.forEach(({key,type}) => {
+  const data = JUTSU_DATA[key] || {};
+  const seqStr = data.seq && data.seq.length
+    ? data.seq.map(s=>s.toUpperCase()).join(" → ")
+    : (key==="kirin" ? "Sharingan + Chidori Sequence" : "Cast 3 Jutsus with Sharingan");
+  const div = document.createElement("div");
+  div.className = `guide-item${type==="combo"?" combo":""}${type==="req"?" sharingan-req":""}`;
+  div.id = `guide-${key}`;
+  let tag = "";
+  if (type==="combo")  tag = `<span class="guide-tag tag-combo">COMBO</span>`;
+  if (type==="req")    tag = `<span class="guide-tag tag-req">SHARINGAN REQ</span>`;
+  if (type==="toggle") tag = `<span class="guide-tag tag-toggle">TOGGLE</span>`;
+  div.innerHTML = `
+    <div class="guide-name">${data.name || JUTSU_NAMES[key] || key}</div>
+    <div class="guide-seq">${seqStr}</div>${tag}`;
+  guideEl.appendChild(div);
+});
+
+// ── BUILD TRAINING JUTSU GRID ──
+function buildTrainingMenu() {
+  const grid = document.getElementById("training-jutsu-grid");
+  grid.innerHTML = "";
+  TRAINABLE.forEach(key => {
+    const info   = JUTSU_INFO[key] || {};
+    const data   = JUTSU_DATA[key] || {};
+    const seq    = data.seq || [];
+    const color  = info.color || "#ffd232";
+    const card   = document.createElement("div");
+    card.className = "jutsu-card";
+    card.style.setProperty("--card-accent", color);
+    const seqPreview = seq.slice(0,4).map(s=>s.toUpperCase()).join(" · ")
+      + (seq.length > 4 ? " ···" : "");
+    const isReq = (key==="susanoo"||key==="amaterasu");
+    const badge = isReq
+      ? `<span class="jc-badge" style="background:rgba(255,34,68,0.12);color:var(--red);border:1px solid rgba(255,34,68,0.3);">SHARINGAN REQ</span>`
+      : `<span class="jc-badge" style="background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.1);">${seq.length} SIGNS</span>`;
+    card.innerHTML = `
+      <span class="jc-kanji">${info.emoji || "✋"}</span>
+      <div class="jc-jutsu-name">${JUTSU_NAMES[key] || key}</div>
+      <div class="jc-english">${info.en || ""}</div>
+      <div class="jc-signs">${seqPreview}</div>
+      ${badge}`;
+    card.onclick = () => startTraining(key);
+    grid.appendChild(card);
+  });
+}
+
+// ── TRAINING MODE STATE ──
+let trainingJutsu     = null;
+let trainingSeq       = [];
+let trainingStep      = 0;
+let trainingDone      = false;
+let lastTrainingJutsu = null;
+
+// Training-mode own sign buffer — ignores global backend buffer
+let trSignBuffer    = [];   // signs collected so far this attempt
+let trLastSign      = null; // last seen current_sign
+let trHoldCount     = 0;    // how many polls we've seen the same sign
+const TR_HOLD_NEEDED = 7;   // polls needed to register (~0.56s at 80ms)
+
+function startTraining(key) {
+  trainingJutsu = key;
+  trainingSeq   = (JUTSU_DATA[key] || {}).seq || [];
+  trainingStep  = 0;
+  trainingDone  = false;
+  lastTrainingJutsu = null;
+
+  const info  = JUTSU_INFO[key] || {};
+  const color = info.color || "#ffd232";
+
+  // Left panel info
+  document.getElementById("tr-kanji").textContent      = info.kanji || "?";
+  document.getElementById("tr-jutsu-name").textContent = JUTSU_NAMES[key] || key;
+  document.getElementById("tr-jutsu-name").style.color = color;
+  document.getElementById("tr-english").textContent    = info.en || "";
+  document.getElementById("tr-signs-list").textContent = trainingSeq.map((s,i)=>`${i+1}. ${s.toUpperCase()}`).join("\n") || "—";
+  updateTrainingProgress();
+
+  // Bottom bar title
+  document.getElementById("tr-bottom-title").textContent  = JUTSU_NAMES[key] || key;
+  document.getElementById("tr-bottom-title").style.color  = color;
+
+  // Build sequence boxes
+  buildSequenceBoxes();
+  updateNextSign();
+  updateTrainingStatus("progress");
+
+  goTo("page-training");
+}
+
+function buildSequenceBoxes() {
+  const seq = document.getElementById("tr-sign-sequence");
+  seq.innerHTML = "";
+  trainingSeq.forEach((sign, i) => {
+    if (i > 0) {
+      const arrow = document.createElement("div");
+      arrow.className = "seq-arrow"; arrow.textContent = "→";
+      seq.appendChild(arrow);
+    }
+    const box = document.createElement("div");
+    box.className = "sign-box";
+    box.id = `sign-box-${i}`;
+    const emoji = SIGN_EMOJI[sign] || "✋";
+    box.innerHTML = `
+      <div class="sign-box-img" style="padding:0;">
+        <img src="/static/signs/${sign}.jpg" 
+             style="width:100%;height:100%;object-fit:cover;border-radius:4px;"
+             onerror="this.parentElement.innerHTML='${emoji}'" />
+      </div>
+      <div class="sign-box-label">${sign}</div>`;
+    seq.appendChild(box);
+  });
+  // mark first as current
+  if (trainingSeq.length > 0) {
+    const first = document.getElementById("sign-box-0");
+    if (first) first.classList.add("current");
+    // scroll to start
+    seq.scrollLeft = 0;
+  }
+}
+
+function updateSequenceBoxes() {
+  trainingSeq.forEach((_, i) => {
+    const box = document.getElementById(`sign-box-${i}`);
+    if (!box) return;
+    box.classList.remove("current","done");
+    if (i < trainingStep)       box.classList.add("done");
+    else if (i === trainingStep) box.classList.add("current");
+  });
+  // scroll current box into view
+  const cur = document.getElementById(`sign-box-${trainingStep}`);
+  if (cur) cur.scrollIntoView({behavior:"smooth", block:"nearest", inline:"center"});
+}
+
+function updateNextSign() {
+  if (trainingStep >= trainingSeq.length) {
+    document.getElementById("tr-next-emoji").textContent = "🎉";
+    document.getElementById("tr-next-name").textContent  = "COMPLETE!";
+    document.getElementById("tr-next-hint").textContent  = "Jutsu ready to fire";
+    return;
+  }
+  const sign = trainingSeq[trainingStep];
+  document.getElementById("tr-next-emoji").innerHTML = 
+  `<img src="/static/signs/${sign}.jpg" 
+        style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,210,50,0.3);"
+        onerror="this.outerHTML='${SIGN_EMOJI[sign]||'✋'}'" />`;
+  document.getElementById("tr-next-name").textContent  = sign.toUpperCase();
+  document.getElementById("tr-next-hint").textContent  = `Sign ${trainingStep+1} of ${trainingSeq.length}`;
+}
+
+function updateTrainingProgress() {
+  const total  = trainingSeq.length;
+  const done   = trainingStep;
+  const pct    = total > 0 ? (done/total*100) : 0;
+  document.getElementById("tr-progress-bar").style.width = pct + "%";
+  document.getElementById("tr-progress-label").textContent = `${done} / ${total} signs`;
+}
+
+function updateTrainingStatus(state) {
+  const el = document.getElementById("tr-status");
+  el.className = "training-status " + state;
+  el.textContent = state === "waiting" ? "WAITING" : state === "progress" ? "IN PROGRESS" : "COMPLETE";
+}
+
+function resetTraining() {
+  if (!trainingJutsu) return;
+  trainingStep = 0; trainingDone = false; lastTrainingJutsu = null;
+  trSignBuffer = []; trLastSign = null; trHoldCount = 0;
+  buildSequenceBoxes();
+  updateNextSign();
+  updateTrainingProgress();
+  updateTrainingStatus("progress");
+  fetch("/api/reset", {method:"POST"});
+  const td = document.getElementById("tr-jutsu-display");
+  td.className   = "jutsu-name-display";
+  td.style.opacity    = "";
+  td.style.transform  = "";
+  td.style.transition = "";
+  td.style.textShadow = "";
+  td.textContent      = "";
+  const tc = document.getElementById("tr-complete-text");
+  tc.className  = "complete-text";
+  tc.style.opacity   = "";
+  tc.style.transition = "";
+  tc.textContent = "";
+}
+
+// ── POLL STATE ──
+let lastPracticeJutsu = null;
+
+async function pollState() {
+  try {
+    const res = await fetch("/api/state");
+    const s   = await res.json();
+
+    // ── PRACTICE PAGE ──
+    if (currentPage === "page-practice") {
+      const fpsBadge = document.getElementById("fps-badge");
+      fpsBadge.textContent = `${s.fps} FPS`;
+      fpsBadge.className = "fps-badge " + (s.fps>=50?"good":s.fps>=30?"ok":"bad");
+
+      const signEl = document.getElementById("sign-name");
+      const confBar= document.getElementById("conf-bar");
+      const confLbl= document.getElementById("conf-label");
+      if (s.current_sign) {
+        signEl.textContent = s.current_sign.toUpperCase();
+        signEl.className = "sign-name";
+        const pct = Math.round(s.conf*100);
+        confBar.style.width = pct+"%";
+        confBar.style.background = `rgb(${Math.round((100-pct)*2)},${Math.round(pct*2)},60)`;
+        confLbl.textContent = `CONFIDENCE: ${pct}%`;
+      } else {
+        signEl.textContent = "NO SIGN"; signEl.className = "sign-name empty";
+        confBar.style.width = "0%"; confLbl.textContent = "CONFIDENCE: --";
+      }
+
+      const dotsEl = document.getElementById("chakra-dots");
+      dotsEl.innerHTML = "";
+      if (s.progress && s.progress.length > 0) {
+        s.progress.forEach(sign => {
+          const dot = document.createElement("div");
+          dot.className = "chakra-dot";
+          dot.innerHTML = `<div class="dot-circle"></div><div class="dot-label">${sign.slice(0,3).toUpperCase()}</div>`;
+          dotsEl.appendChild(dot);
+        });
+      } else { dotsEl.innerHTML = `<div class="chakra-empty">Awaiting signs...</div>`; }
+
+      const badge = document.getElementById("sharingan-badge");
+      if (s.mangekyou) { badge.className="sharingan-badge mangekyou"; badge.textContent="MANGEKYOU"; }
+      else if (s.sharingan_active) { badge.className="sharingan-badge active"; badge.textContent="SHARINGAN ACTIVE"; }
+      else { badge.className="sharingan-badge inactive"; badge.textContent="DORMANT"; }
+
+      for (let i=0;i<3;i++) {
+        const pip = document.getElementById(`pip-${i}`);
+        if (pip) pip.className="counter-pip"+((i<(s.jutsu_count||0))?" filled":"");
+      }
+
+      const ajEl   = document.getElementById("active-jutsu-name");
+      const hintEl = document.getElementById("combo-hint");
+      if (s.active_jutsu) {
+        ajEl.textContent = JUTSU_NAMES[s.active_jutsu]||s.active_jutsu.toUpperCase();
+        ajEl.style.color = JUTSU_CSS_COLORS[s.active_jutsu]||"#fff";
+        ajEl.style.display = "block"; hintEl.style.display = "none";
+        document.querySelectorAll(".guide-item").forEach(el=>el.classList.remove("active-now"));
+        const ag = document.getElementById(`guide-${s.active_jutsu}`);
+        if (ag) ag.classList.add("active-now");
+      } else {
+        ajEl.style.display = "none";
+        hintEl.style.display = s.sharingan_active ? "block" : "none";
+        document.querySelectorAll(".guide-item").forEach(el=>el.classList.remove("active-now"));
+      }
+
+      if (s.active_jutsu && s.active_jutsu !== lastPracticeJutsu) {
+        const d = document.getElementById("jutsu-display");
+        d.textContent = JUTSU_NAMES[s.active_jutsu]||s.active_jutsu.toUpperCase();
+        d.style.color = JUTSU_CSS_COLORS[s.active_jutsu]||"#fff";
+        d.className = "jutsu-name-display";
+        void d.offsetWidth;
+        d.className = "jutsu-name-display firing";
+      }
+      lastPracticeJutsu = s.active_jutsu;
+    }
+
+    // ── TRAINING PAGE ──
+    if (currentPage === "page-training" && trainingJutsu) {
+      const fpsBadge = document.getElementById("tr-fps-badge");
+      fpsBadge.textContent = `${s.fps} FPS`;
+      fpsBadge.className = "fps-badge " + (s.fps>=50?"good":s.fps>=30?"ok":"bad");
+
+      // Sign detection display
+      const signEl = document.getElementById("tr-sign-name");
+      const confBar= document.getElementById("tr-conf-bar");
+      const confLbl= document.getElementById("tr-conf-label");
+      if (s.current_sign) {
+        signEl.textContent = s.current_sign.toUpperCase();
+        signEl.className = "sign-name";
+        const pct = Math.round(s.conf*100);
+        confBar.style.width = pct+"%";
+        confBar.style.background = `rgb(${Math.round((100-pct)*2)},${Math.round(pct*2)},60)`;
+        confLbl.textContent = `CONFIDENCE: ${pct}%`;
+      } else {
+        signEl.textContent = "NO SIGN"; signEl.className = "sign-name empty";
+        confBar.style.width = "0%"; confLbl.textContent = "CONFIDENCE: --";
+      }
+
+      // ── Own sign buffer — only accepts signs in the jutsu's sequence ──
+      if (!trainingDone) {
+        const detected = s.current_sign || null;
+        const expectedSign = trainingSeq[trainingStep] || null;
+
+        if (detected && detected === expectedSign) {
+          // Right sign — count hold frames
+          if (detected === trLastSign) {
+            trHoldCount++;
+          } else {
+            trLastSign  = detected;
+            trHoldCount = 1;
+          }
+
+          if (trHoldCount === TR_HOLD_NEEDED) {
+            // Register this sign
+            trSignBuffer.push(detected);
+            trainingStep++;
+            trHoldCount = 0;
+            trLastSign  = null;
+
+            // Animate the box that just completed
+            const doneBox = document.getElementById(`sign-box-${trainingStep - 1}`);
+            if (doneBox) {
+              doneBox.classList.remove("current");
+              // flash green briefly before settling into done state
+              doneBox.classList.add("done");
+              doneBox.style.transform = "scale(1.15)";
+              setTimeout(() => { doneBox.style.transform = ""; }, 300);
+            }
+
+            updateSequenceBoxes();
+            updateNextSign();
+            updateTrainingProgress();
+
+            if (trainingStep >= trainingSeq.length) {
+              updateTrainingStatus("done");
+            }
+          }
+        } else {
+          // Wrong sign or no sign — reset hold counter but don't penalise
+          if (detected !== trLastSign) {
+            trLastSign  = detected;
+            trHoldCount = 0;
+          }
+        }
+      }
+
+      // ── Jutsu fired — show name, keep it, DON'T auto-reset ──
+      if (s.active_jutsu === trainingJutsu && s.active_jutsu !== lastTrainingJutsu) {
+        trainingDone = true;
+        const d = document.getElementById("tr-jutsu-display");
+        d.textContent = JUTSU_NAMES[s.active_jutsu] || s.active_jutsu.toUpperCase();
+        d.style.color     = JUTSU_CSS_COLORS[s.active_jutsu] || "#fff";
+        d.style.textShadow = `0 0 30px ${JUTSU_CSS_COLORS[s.active_jutsu]||"#fff"}, 0 0 60px ${JUTSU_CSS_COLORS[s.active_jutsu]||"#fff"}`;
+        d.style.transition = "none";
+        d.style.opacity   = "1";
+        d.style.transform = "scale(1)";
+
+        // Fade the jutsu name out after 1.8s
+        setTimeout(() => {
+          d.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+          d.style.opacity    = "0";
+          d.style.transform  = "scale(1.08)";
+        }, 1800);
+
+        // Show "JUTSU COMPLETE!" only after name has faded (1.8 + 0.6 = 2.4s)
+        const ct = document.getElementById("tr-complete-text");
+        ct.textContent = "";
+        ct.className   = "complete-text";
+        setTimeout(() => {
+          ct.textContent = "JUTSU COMPLETE!";
+          ct.style.color = JUTSU_CSS_COLORS[trainingJutsu] || "#ffd232";
+          ct.className   = "complete-text";
+          void ct.offsetWidth;
+          ct.className   = "complete-text show";
+        }, 2400);
+      }
+      lastTrainingJutsu = s.active_jutsu;
+    }
+
+  } catch(e) { /* server not ready */ }
+}
+
+// Count how many signs from the start of `seq` appear consecutively at the
+// tail of `buf` — used to track training progress without a separate engine
+
+setInterval(pollState, 80);
+
+// ── KEYBOARD ──
+document.addEventListener("keydown", e => {
+  if (e.key==="r"||e.key==="R") {
+    if (currentPage==="page-practice") resetApp();
+    if (currentPage==="page-training") resetTraining();
+  }
+  if (e.key==="g"||e.key==="G") toggleGuide();
+  if (e.key==="Escape") {
+    if (currentPage==="page-practice"||currentPage==="page-training") goTo("page-menu");
+    if (currentPage==="page-training-menu") goTo("page-menu");
+  }
+});
+
+function resetApp() {
+  fetch("/api/reset",{method:"POST"});
+  document.getElementById("jutsu-display").className = "jutsu-name-display";
+  lastPracticeJutsu = null;
+}
+
+function toggleGuide() {
+  const panel = document.querySelector("#page-practice .side-panel.right");
+  if (!panel) return;
+  const hiding = panel.style.display !== "none";
+  panel.style.display = hiding ? "none" : "";
+  // When guide is hidden, let video expand to fill the space
+  const video = document.querySelector("#page-practice .video-area");
+  if (video) video.style.gridColumn = hiding ? "2 / -1" : "";
+}
+</script>
+</body>
+</html>

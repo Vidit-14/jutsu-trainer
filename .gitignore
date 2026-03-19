@@ -1,0 +1,17 @@
+# Python
+naruto_env/
+__pycache__/
+*.pyc
+*.pyo
+
+# Model files (too large for GitHub)
+jutsu_cnn.pth
+hand_landmarker.task
+face_landmarker.task
+
+# Generated sounds (optional — remove if you want to commit them)
+sounds/
+
+# OS
+.DS_Store
+Thumbs.db
